@@ -20,6 +20,12 @@ extern const ui_page_t page_music;
 bool app_music_intent(const char *text, char *out, size_t n);
 esp_err_t app_music_play_by_name(const char *name);
 
+/* Online-music API configuration (persisted in NVS "vocat", edited via the web
+ * settings page /settings). app_music_settings_save() updates the runtime copy
+ * and persists; app_music_settings_get() reads the current values. */
+esp_err_t app_music_settings_save(const char *key, const char *api);
+void app_music_settings_get(char *key, size_t key_cap, char *api, size_t api_cap);
+
 #ifdef __cplusplus
 }
 #endif

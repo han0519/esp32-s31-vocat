@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "esp_crt_bundle.h"
+#include "nvs_flash.h"
 #include "esp_lvgl_port.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -326,6 +327,167 @@ static const char *music_find_url(cJSON *node, char *out, size_t out_len, int mo
     return NULL;
 }
 
+/* Primary online music API: yaohud (网易云 VIP 代理). Requires a key from
+ * https://api.yaohud.cn (控制台 -> 密钥管理). The key is stored in NVS
+ * (namespace "vocat", key "music_key") and editable from the web settings page
+ * (/settings). A default key is seeded on first boot. Leave empty (or set via
+ * the web page) to skip yaohud and use the keyless fallbacks only.
+ * Request:  .../wyvip?key=KEY&msg=SONG&n=1  -> data.url is the mp3 stream. */
+#define YAOHUD_URL      "https://api.yaohud.cn/api/music/wyvip"
+#define MUSIC_KEY_NS    "vocat"
+#define MUSIC_KEY_KEY   "music_key"
+#define MUSIC_API_KEY   "music_api"     /* optional custom API template in NVS */
+#define MUSIC_KEY_DFLT  "oIF7nJpFIcsgBBAkDmV"
+#define MUSIC_KEY_MAX   128
+#define MUSIC_API_MAX   256
+
+/* Runtime copy of the key/api so we don't hit NVS on every search. */
+static char s_music_key[MUSIC_KEY_MAX] = {0};
+static char s_music_api[MUSIC_API_MAX] = {0};   /* empty = use yaohud */
+
+/* Load key+api from NVS (seeding the default key on first boot). */
+static void music_settings_load(void)
+{
+    s_music_key[0] = '\0';
+    s_music_api[0] = '\0';
+    nvs_handle_t h = 0;
+    esp_err_t r = nvs_open(MUSIC_KEY_NS, NVS_READWRITE, &h);
+    if (r != ESP_OK) {
+        return;
+    }
+    size_t len = MUSIC_KEY_MAX;
+    if (nvs_get_str(h, MUSIC_KEY_KEY, s_music_key, &len) != ESP_OK) {
+        /* First boot (or key erased): seed the default key. */
+        strncpy(s_music_key, MUSIC_KEY_DFLT, MUSIC_KEY_MAX - 1);
+        nvs_set_str(h, MUSIC_KEY_KEY, s_music_key);
+        nvs_commit(h);
+        ESP_LOGI("MUSIC", "seeded default yaohud key");
+    }
+    len = MUSIC_API_MAX;
+    nvs_get_str(h, MUSIC_API_KEY, s_music_api, &len);  /* may be empty */
+    nvs_close(h);
+}
+
+/* Persist key+api to NVS (called from the web settings page). */
+esp_err_t app_music_settings_save(const char *key, const char *api)
+{
+    if (key == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    nvs_handle_t h = 0;
+    esp_err_t r = nvs_open(MUSIC_KEY_NS, NVS_READWRITE, &h);
+    if (r != ESP_OK) {
+        return r;
+    }
+    strncpy(s_music_key, key, MUSIC_KEY_MAX - 1);
+    s_music_key[MUSIC_KEY_MAX - 1] = '\0';
+    nvs_set_str(h, MUSIC_KEY_KEY, s_music_key);
+    if (api != NULL) {
+        strncpy(s_music_api, api, MUSIC_API_MAX - 1);
+        s_music_api[MUSIC_API_MAX - 1] = '\0';
+        nvs_set_str(h, MUSIC_API_KEY, s_music_api);
+    }
+    nvs_commit(h);
+    nvs_close(h);
+    ESP_LOGI("MUSIC", "saved key='%.*s' api='%s'",
+             (int)strcspn(s_music_key, ""), s_music_key, s_music_api);
+    return ESP_OK;
+}
+
+void app_music_settings_get(char *key, size_t key_cap, char *api, size_t api_cap)
+{
+    if (key) {
+        strncpy(key, s_music_key, key_cap - 1);
+        key[key_cap - 1] = '\0';
+    }
+    if (api) {
+        strncpy(api, s_music_api, api_cap - 1);
+        api[api_cap - 1] = '\0';
+    }
+}
+
+/* Callback type: extract a playable URL from a parsed JSON response. */
+typedef const char *(*music_url_parser_t)(cJSON *root, char *out, size_t out_len);
+
+/* Perform one GET and let `parse` pull the stream URL out of the JSON body. */
+static esp_err_t music_try_request(const char *url, music_url_parser_t parse,
+                                   char *out_url, size_t len)
+{
+    char *body = malloc(MUSIC_BODY_MAX);
+    if (body == NULL) {
+        return ESP_ERR_NO_MEM;
+    }
+    music_http_acc_t acc = { .buf = body, .cap = MUSIC_BODY_MAX, .len = 0 };
+    esp_http_client_config_t cfg = {
+        .url = url,
+        .event_handler = music_http_event,
+        .user_data = &acc,
+        .crt_bundle_attach = esp_crt_bundle_attach,
+        .timeout_ms = MUSIC_HTTP_TIMEOUT_MS,
+        .buffer_size = 1024,
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&cfg);
+    esp_err_t ret = ESP_FAIL;
+    if (client != NULL) {
+        esp_err_t r = esp_http_client_perform(client);
+        int status = esp_http_client_get_status_code(client);
+        ESP_LOGI("MUSIC", "GET %s -> status=%d perf=%s", url, status, esp_err_to_name(r));
+        if (r == ESP_OK && status == 200 && acc.len > 0) {
+            body[acc.len] = '\0';
+            ESP_LOGD("MUSIC", "resp: %s", body);
+            cJSON *root = cJSON_Parse(body);
+            char found[512];
+            if (root != NULL) {
+                if (parse(root, found, sizeof(found)) != NULL) {
+                    strncpy(out_url, found, len - 1);
+                    out_url[len - 1] = '\0';
+                    ret = ESP_OK;
+                }
+                cJSON_Delete(root);
+            }
+        }
+        esp_http_client_cleanup(client);
+    }
+    free(body);
+    return ret;
+}
+
+/* yaohud: data.url (fallback data.musicurl) holds the mp3 stream. */
+static const char *music_parse_yaohud(cJSON *root, char *out, size_t out_len)
+{
+    cJSON *code = cJSON_GetObjectItem(root, "code");
+    if (code != NULL && cJSON_IsNumber(code) && code->valueint != 200) {
+        return NULL;
+    }
+    cJSON *data = cJSON_GetObjectItem(root, "data");
+    if (data == NULL || !cJSON_IsObject(data)) {
+        return NULL;
+    }
+    cJSON *u = cJSON_GetObjectItem(data, "url");
+    if (cJSON_IsString(u) && u->valuestring && strncmp(u->valuestring, "http", 4) == 0) {
+        strncpy(out, u->valuestring, out_len - 1);
+        out[out_len - 1] = '\0';
+        return out;
+    }
+    cJSON *mu = cJSON_GetObjectItem(data, "musicurl");
+    if (cJSON_IsString(mu) && mu->valuestring && strncmp(mu->valuestring, "http", 4) == 0) {
+        strncpy(out, mu->valuestring, out_len - 1);
+        out[out_len - 1] = '\0';
+        return out;
+    }
+    return NULL;
+}
+
+/* Generic: prefer an audio URL, then any non-image http(s). */
+static const char *music_parse_generic(cJSON *root, char *out, size_t out_len)
+{
+    if (music_find_url(root, out, out_len, 0) != NULL ||
+        music_find_url(root, out, out_len, 1) != NULL) {
+        return out;
+    }
+    return NULL;
+}
+
 esp_err_t app_music_online_search(const char *name, char *out_url, size_t len)
 {
     if (name == NULL || name[0] == '\0' || out_url == NULL || len == 0) {
@@ -336,11 +498,38 @@ esp_err_t app_music_online_search(const char *name, char *out_url, size_t len)
     char enc[256];
     music_url_encode(name, enc, sizeof(enc));
 
-    char *body = malloc(MUSIC_BODY_MAX);
-    if (body == NULL) {
-        return ESP_ERR_NO_MEM;
+    /* 0) Custom API template (set via web settings). It must contain the
+     *    literal "{q}" where the song name (already URL-encoded) goes. */
+    if (s_music_api[0] != '\0' && strstr(s_music_api, "{q}") != NULL) {
+        char *req = malloc(strlen(s_music_api) + strlen(enc) + 8);
+        if (req != NULL) {
+            /* Replace the literal "{q}" token with the URL-encoded song name. */
+            const char *p = strstr(s_music_api, "{q}");
+            size_t head = (size_t)(p - s_music_api);
+            memcpy(req, s_music_api, head);
+            strcpy(req + head, enc);
+            strcpy(req + head + strlen(enc), p + 3);  /* skip the "{q}" token */
+            if (music_try_request(req, music_parse_generic, out_url, len) == ESP_OK) {
+                free(req);
+                return ESP_OK;
+            }
+            free(req);
+        }
+        ESP_LOGW("MUSIC", "custom API search failed; falling back to yaohud");
     }
 
+    /* 1) yaohud (网易云 VIP 代理): a single call with n=1 returns the mp3 URL. */
+    if (s_music_key[0] != '\0') {
+        char req[512];
+        snprintf(req, sizeof(req), "%s?key=%s&msg=%s&n=1",
+                 YAOHUD_URL, s_music_key, enc);
+        if (music_try_request(req, music_parse_yaohud, out_url, len) == ESP_OK) {
+            return ESP_OK;
+        }
+        ESP_LOGW("MUSIC", "yaohud search failed; trying keyless fallbacks");
+    }
+
+    /* 2) Keyless fallbacks (free APIs may be blocked/unreliable). */
     esp_err_t ret = ESP_FAIL;
     for (int i = 0; k_music_apis[i] != NULL; i++) {
         size_t req_cap = strlen(k_music_apis[i]) + strlen(enc) + 8;
@@ -349,52 +538,13 @@ esp_err_t app_music_online_search(const char *name, char *out_url, size_t len)
             continue;
         }
         snprintf(req, req_cap, "%s%s", k_music_apis[i], enc);
-
-        music_http_acc_t acc = { .buf = body, .cap = MUSIC_BODY_MAX, .len = 0 };
-        esp_http_client_config_t cfg = {
-            .url = req,
-            .event_handler = music_http_event,
-            .user_data = &acc,
-            .crt_bundle_attach = esp_crt_bundle_attach,
-            .timeout_ms = MUSIC_HTTP_TIMEOUT_MS,
-            .buffer_size = 1024,
-        };
-        esp_http_client_handle_t client = esp_http_client_init(&cfg);
-        if (client == NULL) {
+        if (music_try_request(req, music_parse_generic, out_url, len) == ESP_OK) {
+            ret = ESP_OK;
             free(req);
-            continue;
+            break;
         }
-        esp_err_t r = esp_http_client_perform(client);
-        int status = esp_http_client_get_status_code(client);
-        ESP_LOGI("MUSIC", "search[%d] %s -> status=%d perf=%s", i, k_music_apis[i], status, esp_err_to_name(r));
-        if (r == ESP_OK && status == 200 && acc.len > 0) {
-            body[acc.len] = '\0';
-            ESP_LOGD("MUSIC", "resp: %s", body);
-            cJSON *root = cJSON_Parse(body);
-            char found[512];
-            if (root != NULL) {
-                /* Pass 0: prefer an audio URL (mp3/m4a/...). Pass 1: any
-                 * non-image http(s) URL as a last resort. */
-                if (music_find_url(root, found, sizeof(found), 0) != NULL ||
-                    music_find_url(root, found, sizeof(found), 1) != NULL) {
-                    strncpy(out_url, found, len - 1);
-                    out_url[len - 1] = '\0';
-                    ret = ESP_OK;
-                    cJSON_Delete(root);
-                    esp_http_client_cleanup(client);
-                    free(req);
-                    break;
-                }
-                cJSON_Delete(root);
-            }
-            if (root != NULL) {
-                cJSON_Delete(root);
-            }
-        }
-        esp_http_client_cleanup(client);
         free(req);
     }
-    free(body);
     return ret;
 }
 
@@ -587,6 +737,7 @@ static lv_obj_t *make_btn(lv_obj_t *parent, const char *txt, lv_event_cb_t cb,
 
 esp_err_t page_music_on_enter(void)
 {
+    music_settings_load();   /* refresh key/api from NVS (web-editable) */
     lv_obj_t *root = esp_xiaozhi_chat_display_page_root();
     if (root == NULL) {
         return ESP_FAIL;

@@ -20,6 +20,7 @@
 #include "app_recorder.h"
 #include "app_sdcard.h"
 #include "app_music_player.h"
+#include "page_music.h"
 #include <dirent.h>
 
 static const char *TAG = "http_preview";
@@ -206,7 +207,8 @@ static esp_err_t root_handler(httpd_req_t *req)
         "<input id=\"file\" type=\"file\" accept=\"audio/*\" onchange=\"onFile(this)\" hidden></label>"
         "<button onclick=\"sendPlay()\">▶ 播放</button>"
         "<button class=\"rec\" onclick=\"stopPlay()\">⏹ 停止</button></div>"
-        "<div class=\"controls\"><span id=\"upStat\" style=\"font-size:13px;color:#ffb86c\">选文件后自动上传并播放</span></div>"
+        "<div class=\"controls\"><span id=\"upStat\" style=\"font-size:13px;color:#ffb86c\">选文件后自动上传并播放</span>"
+        "<a href=\"/settings\" style=\"margin-left:auto;background:#222a44;padding:10px 16px;border-radius:12px\">⚙ 音乐设置</a></div>"
         "<script>"
         "const img=document.getElementById('stream');let inflight=false,pre=null;"
         "function loop(){if(inflight)return;inflight=true;"
@@ -579,6 +581,119 @@ static const httpd_uri_t s_uri_stop = {
     .handler = stop_handler,
 };
 
+/* ----- Online-music API settings (KEY + custom API), persisted in NVS ----- */
+
+static esp_err_t settings_handler(httpd_req_t *req)
+{
+    char key[160] = {0}, api[300] = {0};
+    app_music_settings_get(key, sizeof(key), api, sizeof(api));
+
+    static const char html[] =
+        "<!DOCTYPE html><html lang=\"zh\"><head><meta charset=\"utf-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,user-scalable=no\">"
+        "<title>喵伴 · 音乐设置</title>"
+        "<style>"
+        "*{box-sizing:border-box;margin:0;padding:0}"
+        "body{background:radial-gradient(circle at 50%% 0%%,#1c2340,#0b0e1a 70%%);"
+        "min-height:100vh;display:flex;flex-direction:column;align-items:center;"
+        "color:#fff;font-family:'Segoe UI',system-ui,sans-serif;padding:18px}"
+        ".app{width:100%%;max-width:520px;display:flex;flex-direction:column;gap:14px}"
+        ".title{font-size:20px;font-weight:600;letter-spacing:1px;margin-top:4px}"
+        ".title .dot{color:#2ecc71}"
+        ".card{background:#141a30;border:1px solid #2a3355;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}"
+        "label{font-size:13px;color:#9fb0e0}"
+        "input{background:#0d1226;color:#fff;border:1px solid #2a3355;border-radius:10px;padding:11px 12px;font-size:14px;width:100%%}"
+        "input:focus{outline:none;border-color:#4c8cff}"
+        ".hint{font-size:12px;color:#6b78a0;line-height:1.5}"
+        "button{background:linear-gradient(135deg,#4c8cff,#3a6fd0);border:0;color:#fff;"
+        "font-size:15px;font-weight:600;padding:12px 20px;border-radius:14px;cursor:pointer;"
+        "box-shadow:0 6px 18px rgba(76,140,255,.35)}"
+        "button:active{transform:scale(.96)}"
+        "#msg{font-size:13px;color:#2ecc71;min-height:18px}"
+        "a.back{color:#8fa8ff;font-size:13px;text-decoration:none;margin-top:4px}"
+        "</style></head><body><div class=\"app\">"
+        "<div class=\"title\">喵伴 <span class=\"dot\">●</span> 音乐设置</div>"
+        "<div class=\"card\">"
+        "<label>yaohud 密钥 (KEY)</label>"
+        "<input id=\"key\" type=\"text\" placeholder=\"从 api.yaohud.cn 获取\" value=\"%s\">"
+        "<div class=\"hint\">默认使用 yaohud 网易云 VIP 代理：<br>https://api.yaohud.cn/api/music/wyvip?key=KEY&amp;msg=歌名&amp;n=1</div>"
+        "<label>自定义接口 (可选, 留空用默认)</label>"
+        "<input id=\"api\" type=\"text\" placeholder=\"含 {q} 的 URL 模板\" value=\"%s\">"
+        "<div class=\"hint\">如需换成其它音乐源，填一个含 <b>{q}</b> 的 GET 模板（歌名会替换 {q}）。留空则使用默认 yaohud。</div>"
+        "<button onclick=\"save()\">保存</button>"
+        "<div id=\"msg\"></div>"
+        "</div>"
+        "<a class=\"back\" href=\"/\">← 返回摄像头</a>"
+        "<script>"
+        "async function save(){const k=document.getElementById('key').value;"
+        "const a=document.getElementById('api').value;"
+        "const fd=new URLSearchParams();fd.append('key',k);if(a)fd.append('api',a);"
+        "try{const r=await fetch('/api/settings',{method:'POST',body:fd});"
+        "const j=await r.json();"
+        "document.getElementById('msg').textContent=j.ok?'✅ 已保存，播放音乐即可生效':'❌ 保存失败';}"
+        "catch(e){document.getElementById('msg').textContent='❌ 网络错误'}}"
+        "</script></body></html>";
+    /* Inject current values into the static template (HTML-attribute safe: the
+     * server-side values are alphanumeric/NVS strings, not user HTML). */
+    char page[strlen(html) + sizeof(key) + sizeof(api) + 16];
+    int n = snprintf(page, sizeof(page), html,
+                     key[0] ? key : "", api[0] ? api : "");
+    (void)n;
+    httpd_resp_set_type(req, "text/html");
+    return httpd_resp_send(req, page, HTTPD_RESP_USE_STRLEN);
+}
+
+static esp_err_t settings_api_handler(httpd_req_t *req)
+{
+    char key[160] = {0}, api[300] = {0};
+    bool got_key = false, got_api = false;
+
+    /* POST body is urlencoded form (key=...&api=...). */
+    if (req->content_len > 0 && req->content_len < (int)(sizeof(key) + sizeof(api) + 32)) {
+        char *body = malloc(req->content_len + 1);
+        if (body) {
+            int r = httpd_req_recv(req, body, req->content_len);
+            if (r > 0) {
+                body[r] = '\0';
+                char v[160];
+                if (httpd_query_key_value(body, "key", v, sizeof(v)) == ESP_OK) {
+                    strncpy(key, v, sizeof(key) - 1);
+                    got_key = true;
+                }
+                if (httpd_query_key_value(body, "api", v, sizeof(api)) == ESP_OK) {
+                    strncpy(api, v, sizeof(api) - 1);
+                    got_api = true;
+                }
+            }
+            free(body);
+        }
+    }
+
+    if (!got_key) {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, "{\"ok\":false,\"err\":\"missing key\"}", 28);
+        return ESP_OK;
+    }
+    esp_err_t res = app_music_settings_save(key, got_api ? api : NULL);
+    char resp[48];
+    snprintf(resp, sizeof(resp), "{\"ok\":%s}", (res == ESP_OK) ? "true" : "false");
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, resp, strlen(resp));
+    return ESP_OK;
+}
+
+static const httpd_uri_t s_uri_settings = {
+    .uri = "/settings",
+    .method = HTTP_GET,
+    .handler = settings_handler,
+};
+
+static const httpd_uri_t s_uri_settings_api = {
+    .uri = "/api/settings",
+    .method = HTTP_POST,
+    .handler = settings_api_handler,
+};
+
 esp_err_t http_preview_start(void)
 {
     if (s_running) {
@@ -594,7 +709,7 @@ esp_err_t http_preview_start(void)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = 80;
     config.task_priority = 4;
-    config.max_uri_handlers = 10;
+    config.max_uri_handlers = 16;
     /* Purge least-recently-used sockets so a stale/abandoned browser tab does
      * not leak a connection and clog the single httpd task (which made the
      * snapshot polling appear frozen). */
@@ -616,6 +731,8 @@ esp_err_t http_preview_start(void)
     httpd_register_uri_handler(s_server, &s_uri_upload);
     httpd_register_uri_handler(s_server, &s_uri_play_url);
     httpd_register_uri_handler(s_server, &s_uri_stop);
+    httpd_register_uri_handler(s_server, &s_uri_settings);
+    httpd_register_uri_handler(s_server, &s_uri_settings_api);
 
     s_running = true;
 
