@@ -452,7 +452,12 @@ static esp_err_t music_try_request(const char *url, music_url_parser_t parse,
     return ret;
 }
 
-/* yaohud: data.url (fallback data.musicurl) holds the mp3 stream. */
+/* yaohud response (verified):
+ *   {"code":200,"data":{"name":...,"url":"https://music.163.com/song/media/
+ *    outer/url?id=NNN.mp3",  // outer url, needs a 302 redirect
+ *    "vipmusic":{"url":"http://mNNN.music.126.net/.../NNN.mp3?vuutv=..."}}} // direct file
+ * Prefer the direct vipmusic.url (no redirect, 320kbps); fall back to the
+ * outer data.url (GMF follows the 302), then data.musicurl. */
 static const char *music_parse_yaohud(cJSON *root, char *out, size_t out_len)
 {
     cJSON *code = cJSON_GetObjectItem(root, "code");
@@ -463,12 +468,24 @@ static const char *music_parse_yaohud(cJSON *root, char *out, size_t out_len)
     if (data == NULL || !cJSON_IsObject(data)) {
         return NULL;
     }
+    /* 1) direct VIP file URL (no redirect, highest quality) */
+    cJSON *vip = cJSON_GetObjectItem(data, "vipmusic");
+    if (vip != NULL && cJSON_IsObject(vip)) {
+        cJSON *vu = cJSON_GetObjectItem(vip, "url");
+        if (cJSON_IsString(vu) && vu->valuestring && strncmp(vu->valuestring, "http", 4) == 0) {
+            strncpy(out, vu->valuestring, out_len - 1);
+            out[out_len - 1] = '\0';
+            return out;
+        }
+    }
+    /* 2) outer url (302 redirect to the real file) */
     cJSON *u = cJSON_GetObjectItem(data, "url");
     if (cJSON_IsString(u) && u->valuestring && strncmp(u->valuestring, "http", 4) == 0) {
         strncpy(out, u->valuestring, out_len - 1);
         out[out_len - 1] = '\0';
         return out;
     }
+    /* 3) legacy musicurl field */
     cJSON *mu = cJSON_GetObjectItem(data, "musicurl");
     if (cJSON_IsString(mu) && mu->valuestring && strncmp(mu->valuestring, "http", 4) == 0) {
         strncpy(out, mu->valuestring, out_len - 1);
