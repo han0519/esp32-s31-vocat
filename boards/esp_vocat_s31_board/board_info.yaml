@@ -1,0 +1,5 @@
+board: esp_vocat_s31_board
+chip: esp32s31
+version: 1.0.0
+description: "ESP VoCat S31 Board - AI Pet Companion (喵伴)"
+manufacturer: "ESPRESSIF"

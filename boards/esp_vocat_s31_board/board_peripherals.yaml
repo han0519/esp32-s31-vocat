@@ -1,0 +1,119 @@
+# Peripherals Configuration for ESP VoCat S31 Board (喵伴)
+# Pins VERIFIED against the live EasyEDA project (ESP-VoCat-S31 喵伴, CoreBoard V1_0)
+# via the easyeda-api skill on 2026-08-09. This is the physical hardware truth.
+#
+# EDA-verified pin map (read from the PCB netlist + schematic):
+#   LCD module (FPC) pin->net:  pin12=GPIO38(D0) pin13=GPIO44(D1) pin14=GPIO37(D2)
+#                                  pin15=GPIO45(D3) pin10=GPIO39(SCLK) pin11=GPIO43(CS)
+#                                  pin4=GPIO60(RST)  pin3=GPIO42(TP_INT)
+#   Backlight: LCD_BLK net -> Q101(AO3400A) gate -> MCU GPIO46  (GPIO44 is QSPI D1, NOT BL)
+#   I2S (ES8389): ES_SCLK=GPIO16(BCLK) ES_DLRCK=GPIO18(WS) ES_DSDIN=GPIO35(DOUT) ES_ASDOUT=GPIO19(DIN)  MCLK-less
+#   I2C (BAT bus, via Q103): SDA=GPIO1  SCL=GPIO0   (ES8389 addr 0x20, CST816S addr 0x2A)
+#   PA: PA_CTRL=GPIO2   CODEC_PWR_CTRL=GPIO17   POWER_CTRL=GPIO9 (->LCD_3V3)   ESP_BOOT=GPIO61
+peripherals:
+  # Shared I2C bus (BAT bus, Q103 level-shifted): ES8389 codec (addr 0x20),
+  # CST816S touch (addr 0x2A). EDA nets: BAT_SDA=GPIO1, BAT_SCL=GPIO0.
+  - name: i2c_master
+    type: i2c
+    role: master
+    config:
+      port: 0
+      pins:
+        sda: 1                      # BAT_SDA -> ES8389 SDA / CST816S SDA (EDA BAT_SDA=GPIO1)
+        scl: 0                      # BAT_SCL -> ES8389 SCL / CST816S SCL (EDA BAT_SCL=GPIO0)
+
+  # ES8389 audio I2S (MCLK-less — ES_MCLK not wired to MCU).
+  # EDA nets: ES_SCLK=GPIO16, ES_DLRCK=GPIO18, ES_DSDIN=GPIO35, ES_ASDOUT=GPIO19.
+  - name: i2s_audio_out
+    type: i2s
+    role: master
+    format: std-out
+    config: &i2s_audio_config
+      port: 0
+      # v014 (known-good firmware on this exact 喵伴 board) runs the ES8389 I2S
+      # 16 kHz / 16-bit: native format of the esp-sr AFE, and supported by the
+      # ES8389 coeff table ({64, 1024000, 16000} matches 16000*16*4 / ratio 64).
+      # 48 kHz / 32-bit fed the AFE 6x its expected data rate and hung afe_feed.
+      sample_rate_hz: 16000
+      mclk_multiple: 256
+      data_bit_width: 16
+      slot_bit_width: I2S_SLOT_BIT_WIDTH_AUTO
+      slot_mode: I2S_SLOT_MODE_STEREO
+      slot_mask: I2S_STD_SLOT_BOTH
+      ws_width: 16
+      pins:
+        mclk: -1                    # MCLK-less mode on 喵伴
+        bclk: 16                     # ES_SCLK  (EDA: ES_SCLK=GPIO16)
+        ws: 18                       # ES_DLRCK (EDA: ES_DLRCK=GPIO18)
+        dout: 35                     # ES_DSDIN (DAC data in,  GPIO35)
+        din: 19                      # ES_ASDOUT (ADC data out, GPIO19)
+
+  - name: i2s_audio_in
+    type: i2s
+    role: master
+    format: std-in
+    config: *i2s_audio_config
+
+  # NOTE: NS4150B PA enable (PA_CTRL = GPIO2) is NOT a board peripheral.
+  # The ES8389 codec driver and the application both claimed GPIO2 in the past,
+  # which produced a double-drive conflict that left the PA stuck LOW (muted).
+  # GPIO2 is now owned solely by the application (esp_xiaozhi_chat_app.c ->
+  # app_pa_enable), which drives it HIGH once at init and re-asserts it on every
+  # playback frame. Keep it OUT of the board peripheral list to avoid any framework
+  # re-assertion fighting the app's level.
+
+  # Codec power control. Schematic: CODEC_PWR_CTRL=GPIO17 -> U2 (HE9073A33M5R)
+  # CE pin. CE is active-HIGH: GPIO17 HIGH turns on CODEC_3V3 for the ES8389.
+  - name: gpio_codec_power
+    type: gpio
+    role: io
+    config:
+      pin: 17
+      mode: GPIO_MODE_OUTPUT
+      default_level: 1             # active-HIGH (CODEC_3V3 enable)
+
+  # LCD backlight. Schematic (OHHWHub): LCD_BLK -> Q101 (AO3400A) gate -> MCU GPIO46.
+  # GPIO46 is the backlight PWM; GPIO44 is the QSPI D1 data line, NOT the backlight.
+  - name: ledc_backlight
+    type: ledc
+    role: none
+    config:
+      gpio_num: 46
+      freq_hz: 2000
+      duty: 0
+      duty_resolution: LEDC_TIMER_10_BIT
+
+  # LCD power control. EDA: POWER_CTRL=GPIO9 -> Q100 AO3401A (PMOS) -> ME6211C -> LCD_3V3.
+  # PMOS gate LOW = ON, so default LOW to enable LCD power (v014 proven).
+  - name: gpio_power_lcd
+    type: gpio
+    role: io
+    config:
+      pin: 9
+      mode: GPIO_MODE_OUTPUT
+      default_level: 0
+
+  # No on-board status LED on 喵伴 (LED_G pads NC).
+  - name: gpio_led_g
+    type: gpio
+    role: io
+    config:
+      pin: -1
+      mode: GPIO_MODE_DISABLE
+
+  # ST77916 QSPI 360x360 round LCD over SPI2 — PINS FROM OFFICIAL v014 FIRMWARE
+  # (the ONLY config proven to display correctly on this physical 喵伴 board).
+  # The EasyEDA netlist (D0=38/D1=44/D2=37/D3=45/BL=46) is WRONG and yields a dark
+  # or garbage screen. v014 uses: D0=4 D1=37 D2=6 D3=45 SCLK=39 CS=43 DC=40 RST=60 BL=44.
+  - name: spi_display
+    type: spi
+    role: master
+    config:
+      spi_bus_config:
+        spi_port: SPI2_HOST
+        data0_io_num: 38             # QSPI DATA0 (LCD D0)  — schematic (OHHWHub)
+        data1_io_num: 44             # QSPI DATA1 (LCD D1)  — schematic (OHHWHub)
+        data2_io_num: 37             # QSPI DATA2 (LCD D2)  — schematic (OHHWHub)
+        data3_io_num: 45             # QSPI DATA3 (LCD D3)  — schematic (OHHWHub)
+        sclk_io_num: 39              # QSPI SCLK (LCD SCLK) — schematic (OHHWHub)
+        max_transfer_sz: 7200

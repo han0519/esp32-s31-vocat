@@ -1,0 +1,35 @@
+dependencies:
+  espressif/cjson:
+    public: true
+    version: ^1.7.19
+  espressif/cmake_utilities:
+    public: true
+    version: 0.5.0
+  espressif/esp_mmap_assets:
+    public: true
+    version: 1.*
+  espressif2022/esp_emote_assets:
+    version: ^0.1.0
+  espressif2022/esp_emote_gfx:
+    public: true
+    version: <=3.0.5
+  # vocat patch: depend on 78__xiaozhi-fonts so emote_setup.c can reference
+  # font_puhui_14_1 (the bundled 20_4 font is too wide/blurry on 360x360).
+  # Component names can't contain double underscores; use the directory name
+  # without the underscore prefix.
+  xiaozhi-fonts:
+    version: "*"
+    override_path: "../../../78__xiaozhi-fonts"
+  idf:
+    version: '>=5.0'
+description: ESP-Brookesia-Expression-Emote is a component for managing expression
+  emotes in ESP-Brookesia.
+documentation: https://github.com/espressif2022/esp_emote_expression
+issues: https://github.com/espressif2022/esp_emote_expression/issues
+license: Apache-2.0
+repository: git://github.com/espressif2022/esp_emote_expression.git
+repository_info:
+  commit_sha: 5c290a6304a9d84dc410a20613f97c19d6ae95bc
+  path: .
+url: https://github.com/espressif2022/esp_emote_expression
+version: 1.0.2

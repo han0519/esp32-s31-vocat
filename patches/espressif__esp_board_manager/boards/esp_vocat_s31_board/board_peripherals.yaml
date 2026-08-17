@@ -1,0 +1,116 @@
+# Peripherals Configuration for ESP VoCat S31 Board (喵伴) — user-authored
+# Values verified against the actual OHHWHub schematic (see
+# H:\espwork\esp-projects\vocat-xiaozhi\hardware\esp_vocat_s31_board_full.json).
+peripherals:
+  # Shared I2C bus for ES8389 codec (Q103 level-shifted onto BAT bus BAT_SCL/BAT_SDA),
+  # CST816S touch, future BMI270.
+  - name: i2c_master
+    type: i2c
+    role: master
+    config:
+      port: 0
+      pins:
+        sda: 1
+        scl: 0
+
+  # ES8389 audio I2S (MCLK-less — DNP R6 pads; ES_MCLK has 0 MCU pads)
+  - name: i2s_audio_out
+    type: i2s
+    role: master
+    format: std-out
+    config: &i2s_audio_config
+      port: 0
+      # 16 kHz / 16-bit is the native format of the esp-sr AFE (WakeNet/VAD/NS all
+      # run at 16 kHz) and it IS supported by the ES8389 coeff table:
+      # es8389_config_sample(16000, 16) -> mclk_fre = 16000*16*4 = 1024000,
+      # ratio = 64 -> coeff_div entry {64, 1024000, 16000} matches.
+      # Running the board at 48 kHz / 32-bit fed the AFE 6x the data it expects,
+      # which overflowed the AFE FEED ring buffer and hung the afe_feed task
+      # ("Ringbuffer of AFE(FEED) is full" + task_wdt on CPU1).
+      sample_rate_hz: 16000
+      mclk_multiple: 256
+      data_bit_width: 16
+      slot_bit_width: I2S_SLOT_BIT_WIDTH_AUTO
+      slot_mode: I2S_SLOT_MODE_STEREO
+      slot_mask: I2S_STD_SLOT_BOTH
+      ws_width: 16
+      pins:
+        mclk: -1                    # MCLK not wired to MCU
+        bclk: 16                    # ES_SCLK
+        ws: 18                      # ES_DLRCK
+        dout: 35                    # ES_DSDIN (DAC data in)
+        din: 19                     # ES_ASDOUT (ADC data out)
+
+  - name: i2s_audio_in
+    type: i2s
+    role: master
+    format: std-in
+    config: *i2s_audio_config
+
+  # NS4150B PA enable (PA_CTRL = GPIO2) is driven solely by the application
+  # (esp_xiaozhi_chat_app.c -> app_pa_enable, which asserts GPIO2 HIGH at init
+  # and on every playback frame). The ES8389 codec does NOT drive pa_pin, so
+  # there is no double-drive conflict. A gpio_pa_control peripheral with pin: -1
+  # is rejected by the board YAML schema (pin must be >= 0), so it is omitted.
+
+  # Codec power control. Schematic: CODEC_PWR_CTRL=GPIO17 -> U2 (HE9073A33M5R)
+  # CE pin. CE is active-HIGH: GPIO17 HIGH turns on CODEC_3V3 for the ES8389.
+  - name: gpio_codec_power
+    type: gpio
+    role: io
+    config:
+      pin: 17
+      mode: GPIO_MODE_OUTPUT
+      default_level: 1              # active-HIGH (CODEC_3V3 enable)
+
+  # LCD backlight. Schematic (OHHWHub): LCD_BLK net -> Q101 (AO3400A) gate -> MCU GPIO46.
+  # GPIO46 is the backlight PWM. GPIO44 is the QSPI D1 data line, NOT the backlight,
+  # so the earlier "GPIO44 = backlight" assumption was wrong and left the screen dark.
+  - name: ledc_backlight
+    type: ledc
+    role: none
+    config:
+      gpio_num: 46
+      freq_hz: 2000
+      duty: 0
+      duty_resolution: LEDC_TIMER_10_BIT
+
+  # LCD power control. Schematic: POWER_CTRL=GPIO9 -> Q100 (AO3401A P-MOS) gate
+  # -> ME6211C -> LCD_3V3. P-MOS is LOW-active, so default LOW to power the LCD.
+  - name: gpio_power_lcd
+    type: gpio
+    role: io
+    config:
+      pin: 9
+      mode: GPIO_MODE_OUTPUT
+      default_level: 0
+
+  # Camera power control. Schematic: CAM_EN=GPIO10, Q1 AO3401A (PMOS) → CAM_3V3.
+  # Active-LOW: power_ctrl device drives this GPIO LOW to turn the camera 3.3V on.
+  - name: gpio_cam_power
+    type: gpio
+    role: io
+    config:
+      pin: 10
+      mode: GPIO_MODE_OUTPUT
+      default_level: 1              # idle = high = camera powered OFF
+
+  # No on-board status LED on 喵伴 (LED_G=0 pads) — gpio_led_g peripheral omitted
+  # because the board YAML schema requires pin >= 0 and there is no LED to drive.
+
+  # ST77916 QSPI 360x360 LCD over SPI2.
+  # Pins taken directly from the user-supplied OHHWHub schematic screenshots
+  # (D0=38/D1=44/D2=37/D3=45/SCLK=39/DC=40/CS=43/RST=60/BL=46). This is the
+  # hardware truth; any other pin assignment produces dark/garbage screen.
+  - name: spi_display
+    type: spi
+    role: master
+    config:
+      spi_bus_config:
+        spi_port: SPI2_HOST
+        data0_io_num: 38             # QSPI DATA0 / LCD D0  — schematic
+        data1_io_num: 44             # QSPI DATA1 / LCD D1  — schematic
+        data2_io_num: 37             # QSPI DATA2 / LCD D2  — schematic
+        data3_io_num: 45             # QSPI DATA3 / LCD D3  — schematic
+        sclk_io_num: 39              # QSPI SCLK / LCD SCLK — schematic
+        max_transfer_sz: 7200

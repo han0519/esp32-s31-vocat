@@ -1,0 +1,19 @@
+# ESP-IDF Partition Table -- ESP-VoCat-S31 (16 MB flash)
+#
+# The Espressif emote pack (emote-assets1.bin, ~5.6 MB of .eaf animations) needs
+# a dedicated read-only data partition. Two 6 MB OTA slots + 6 MB of assets do
+# not fit in 16 MB, and this build never performs an OTA update (it only reads
+# esp_ota_get_running_partition() for the device-info report), so the app runs
+# from a single oversized factory slot instead.
+#
+# Name,   Type, SubType, Offset,    Size,     Flags
+# NVS enlarged 16K -> 64K: the chat-history store overwrites keys in NVS, and
+# NVS overwrites accumulate stale pages; 16K filled up and made
+# esp_wifi_set_config() return ESP_ERR_NVS_NO_FREE_PAGES, aborting the board
+# ("switched WiFi -> crash"). 64K gives ample headroom for wifi creds + history.
+nvs,      data, nvs,     0x9000,    0x10000,
+otadata,  data, ota,     0x19000,   0x2000,
+phy_init, data, phy,     0x1b000,   0x1000,
+model,    data, spiffs,  0x1c000,   0xE4000,
+factory,  app,  factory, 0x100000,  0x740000,
+assets,   data, spiffs,  0x840000,  0x600000,

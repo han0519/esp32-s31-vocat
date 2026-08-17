@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+managed_components/
+dependencies.lock
+
+# ESP-IDF generated
+sdkconfig.old
+sdkconfig.bootloader.old
+*.bin.tmp
+
+# Logs / temp / debug dumps
+*.log
+*.err
+*.out
+*.gif
+*.pem
+_tmp_*
+_cap*
+_rapid*
+bg_*
+tools_probe_*
+*_install*.err
+*_install*.out
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

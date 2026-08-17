@@ -1,0 +1,1114 @@
+{
+  "success": true,
+  "result": {
+    "projectName": "ESP-VoCat-S31 喵伴：视觉与蓝牙音频的 AI 萌宠_copy",
+    "docType": 1,
+    "docUuid": "8dfa4a1da8f91d9a",
+    "compCount": 83,
+    "wireCount": 77,
+    "pinsViaApiCount": 0,
+    "uniqueNetCount": 24,
+    "nets": [
+      "AGND",
+      "AUDIO_I2C_SCL",
+      "AUDIO_I2C_SDA",
+      "CODEC_3V3",
+      "CODEC_PWR_CTRL",
+      "ES_ASDOUT",
+      "ES_DLRCK",
+      "ES_DSDIN",
+      "ES_I2C_SCL",
+      "ES_I2C_SDA",
+      "ES_LOUTN",
+      "ES_LOUTP",
+      "ES_MCLK",
+      "ES_MIC1N",
+      "ES_MIC1P",
+      "ES_MIC2N",
+      "ES_MIC2P",
+      "ES_SCLK",
+      "GND",
+      "LED_G",
+      "PA_CTRL",
+      "VIN",
+      "VON",
+      "VOP"
+    ],
+    "compList": [
+      {
+        "name": "",
+        "net": "",
+        "x": 0,
+        "y": 0,
+        "componentType": "sheet",
+        "symbolName": "Espressif-Symbol-A3",
+        "footprintUuid": ""
+      },
+      {
+        "designator": "R126",
+        "name": "={Value}",
+        "net": "",
+        "x": 730,
+        "y": 330,
+        "componentType": "part",
+        "symbolName": "0402WGF1002TCE",
+        "footprintUuid": "4126edd409467fbe"
+      },
+      {
+        "designator": "C151",
+        "name": "={Value}",
+        "net": "",
+        "x": 730,
+        "y": 250,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C148",
+        "name": "={Value}",
+        "net": "",
+        "x": 905,
+        "y": 265,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C3",
+        "name": "={Value}",
+        "net": "",
+        "x": 475,
+        "y": 615,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C4",
+        "name": "={Value}",
+        "net": "",
+        "x": 510,
+        "y": 615,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C7",
+        "name": "={Value}",
+        "net": "",
+        "x": 990,
+        "y": 595,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C8",
+        "name": "={Value}",
+        "net": "",
+        "x": 990,
+        "y": 605,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C9",
+        "name": "={Value}",
+        "net": "",
+        "x": 990,
+        "y": 655,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C10",
+        "name": "={Value}",
+        "net": "",
+        "x": 990,
+        "y": 665,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C11",
+        "name": "={Value}",
+        "net": "",
+        "x": 990,
+        "y": 675,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C12",
+        "name": "={Value}",
+        "net": "",
+        "x": 990,
+        "y": 685,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C13",
+        "name": "={Value}",
+        "net": "",
+        "x": 960,
+        "y": 545,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C14",
+        "name": "={Value}",
+        "net": "",
+        "x": 1090,
+        "y": 595,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C15",
+        "name": "={Value}",
+        "net": "",
+        "x": 1110,
+        "y": 595,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C16",
+        "name": "={Value}",
+        "net": "",
+        "x": 1130,
+        "y": 595,
+        "componentType": "part",
+        "symbolName": "CL05A105KA5NQNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "name": "VIN",
+        "net": "VIN",
+        "x": 1010,
+        "y": 285,
+        "componentType": "netflag",
+        "symbolName": "5-Voltage"
+      },
+      {
+        "name": "VIN",
+        "net": "VIN",
+        "x": 95,
+        "y": 740,
+        "componentType": "netflag",
+        "symbolName": "5-Voltage",
+        "footprintUuid": ""
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 880,
+        "y": 240,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 730,
+        "y": 230,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 730,
+        "y": 350,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 975,
+        "y": 310,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 965,
+        "y": 385,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 310,
+        "y": 115,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 190,
+        "y": 65,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 190,
+        "y": 195,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 245,
+        "y": 635,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND",
+        "footprintUuid": ""
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 145,
+        "y": 635,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND",
+        "footprintUuid": ""
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 285,
+        "y": 670,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND",
+        "footprintUuid": ""
+      },
+      {
+        "name": "GND",
+        "net": "GND",
+        "x": 95,
+        "y": 670,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND",
+        "footprintUuid": ""
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 560,
+        "y": 680,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND",
+        "footprintUuid": ""
+      },
+      {
+        "designator": "R127",
+        "name": "={Value}",
+        "net": "",
+        "x": 685,
+        "y": 285,
+        "componentType": "part",
+        "symbolName": "0402WGF1003TCE",
+        "footprintUuid": "4126edd409467fbe"
+      },
+      {
+        "designator": "R128",
+        "name": "={Value}",
+        "net": "",
+        "x": 685,
+        "y": 275,
+        "componentType": "part",
+        "symbolName": "0402WGF1003TCE",
+        "footprintUuid": "4126edd409467fbe"
+      },
+      {
+        "designator": "C146",
+        "name": "={Value}",
+        "net": "",
+        "x": 615,
+        "y": 285,
+        "componentType": "part",
+        "symbolName": "CL05B104KO5NNNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C147",
+        "name": "={Value}",
+        "net": "",
+        "x": 615,
+        "y": 275,
+        "componentType": "part",
+        "symbolName": "CL05B104KO5NNNC",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C149",
+        "name": "={Value}",
+        "net": "",
+        "x": 945,
+        "y": 265,
+        "componentType": "part",
+        "symbolName": "CL10A226MO7JZNC",
+        "footprintUuid": "52bc2079020533fc"
+      },
+      {
+        "designator": "C150",
+        "name": "={Value}",
+        "net": "",
+        "x": 985,
+        "y": 265,
+        "componentType": "part",
+        "symbolName": "CL10A226MO7JZNC",
+        "footprintUuid": "52bc2079020533fc"
+      },
+      {
+        "designator": "U106",
+        "name": "={Manufacturer Part}",
+        "net": "",
+        "x": 810,
+        "y": 290,
+        "componentType": "part",
+        "symbolName": "NS4150",
+        "footprintUuid": "8edba3c422f3404b"
+      },
+      {
+        "name": "PA_CTRL",
+        "net": "PA_CTRL",
+        "x": 730,
+        "y": 305,
+        "componentType": "netport",
+        "symbolName": "Netport-IN"
+      },
+      {
+        "name": "ES_I2C_SDA",
+        "net": "ES_I2C_SDA",
+        "x": 165,
+        "y": 465,
+        "componentType": "netport",
+        "symbolName": "Netport-IN"
+      },
+      {
+        "name": "ES_I2C_SCL",
+        "net": "ES_I2C_SCL",
+        "x": 165,
+        "y": 355,
+        "componentType": "netport",
+        "symbolName": "Netport-IN"
+      },
+      {
+        "name": "CODEC_PWR_CTRL",
+        "net": "CODEC_PWR_CTRL",
+        "x": 145,
+        "y": 680,
+        "componentType": "netport",
+        "symbolName": "Netport-IN",
+        "footprintUuid": ""
+      },
+      {
+        "designator": "Q103",
+        "name": "={Manufacturer Part}",
+        "net": "",
+        "x": 190,
+        "y": 465,
+        "componentType": "part",
+        "symbolName": "LBSS138DW1T1G",
+        "footprintUuid": "be774fa64c069b88"
+      },
+      {
+        "designator": "Q103",
+        "name": "={Manufacturer Part}",
+        "net": "",
+        "x": 190,
+        "y": 355,
+        "componentType": "part",
+        "symbolName": "LBSS138DW1T1G",
+        "footprintUuid": "be774fa64c069b88"
+      },
+      {
+        "name": "CODEC_3V3",
+        "net": "CODEC_3V3",
+        "x": 215,
+        "y": 510,
+        "componentType": "netflag",
+        "symbolName": "Power-VCC"
+      },
+      {
+        "name": "CODEC_3V3",
+        "net": "CODEC_3V3",
+        "x": 215,
+        "y": 400,
+        "componentType": "netflag",
+        "symbolName": "Power-VCC"
+      },
+      {
+        "name": "CODEC_3V3",
+        "net": "CODEC_3V3",
+        "x": 285,
+        "y": 735,
+        "componentType": "netflag",
+        "symbolName": "Power-VCC",
+        "footprintUuid": ""
+      },
+      {
+        "designator": "R113",
+        "name": "={Value}",
+        "net": "",
+        "x": 215,
+        "y": 485,
+        "componentType": "part",
+        "symbolName": "电阻",
+        "footprintUuid": "c7949492a10c6056"
+      },
+      {
+        "designator": "R120",
+        "name": "={Value}",
+        "net": "",
+        "x": 215,
+        "y": 375,
+        "componentType": "part",
+        "symbolName": "电阻",
+        "footprintUuid": "c7949492a10c6056"
+      },
+      {
+        "designator": "C144",
+        "name": "={Value}",
+        "net": "",
+        "x": 905,
+        "y": 325,
+        "componentType": "part",
+        "symbolName": "0402B102K500NT",
+        "footprintUuid": "42c168dc51d845f0"
+      },
+      {
+        "designator": "C145",
+        "name": "={Value}",
+        "net": "",
+        "x": 935,
+        "y": 325,
+        "componentType": "part",
+        "symbolName": "0402B102K500NT",
+        "footprintUuid": "42c168dc51d845f0"
+      },
+      {
+        "designator": "CN103",
+        "name": "={Manufacturer Part}",
+        "net": "",
+        "x": 965,
+        "y": 350,
+        "componentType": "part",
+        "symbolName": "HC-1.25-2PLT",
+        "footprintUuid": "845a2c301ce404f4"
+      },
+      {
+        "name": "CODEC_3V3",
+        "net": "CODEC_3V3",
+        "x": 110,
+        "y": 165,
+        "componentType": "netflag",
+        "symbolName": "5-Voltage"
+      },
+      {
+        "designator": "FPC101",
+        "name": "={Manufacturer Part}",
+        "net": "",
+        "x": 190,
+        "y": 130,
+        "componentType": "part",
+        "symbolName": "AFC11-S08ICA-00",
+        "footprintUuid": "1e342997dc2db150"
+      },
+      {
+        "designator": "R1",
+        "name": "={Value}",
+        "net": "",
+        "x": 195,
+        "y": 640,
+        "componentType": "part",
+        "symbolName": "0402WGF0000TCE",
+        "footprintUuid": "c7949492a10c6056"
+      },
+      {
+        "designator": "R2",
+        "name": "={Value}",
+        "net": "",
+        "x": 530,
+        "y": 730,
+        "componentType": "part",
+        "symbolName": "0402WGF0000TCE",
+        "footprintUuid": "c7949492a10c6056"
+      },
+      {
+        "designator": "R3",
+        "name": "={Value}",
+        "net": "",
+        "x": 530,
+        "y": 720,
+        "componentType": "part",
+        "symbolName": "0402WGF0000TCE",
+        "footprintUuid": "c7949492a10c6056"
+      },
+      {
+        "designator": "R6",
+        "name": "={Value}",
+        "net": "",
+        "x": 570,
+        "y": 585,
+        "componentType": "part",
+        "symbolName": "0402WGF0000TCE",
+        "footprintUuid": "c7949492a10c6056"
+      },
+      {
+        "designator": "U2",
+        "name": "={Manufacturer Part}",
+        "net": "",
+        "x": 210,
+        "y": 725,
+        "componentType": "part",
+        "symbolName": "HE9073A33M5R",
+        "footprintUuid": "f4310bcfe4aa7ac8"
+      },
+      {
+        "designator": "C1",
+        "name": "={Value}",
+        "net": "",
+        "x": 95,
+        "y": 710,
+        "componentType": "part",
+        "symbolName": "CL10A106KP8NNNC_1",
+        "footprintUuid": "043d77a054c7a401"
+      },
+      {
+        "designator": "C2",
+        "name": "={Value}",
+        "net": "",
+        "x": 285,
+        "y": 695,
+        "componentType": "part",
+        "symbolName": "CL10A106KP8NNNC_1",
+        "footprintUuid": "043d77a054c7a401"
+      },
+      {
+        "designator": "C17",
+        "name": "={Value}",
+        "net": "",
+        "x": 560,
+        "y": 695,
+        "componentType": "part",
+        "symbolName": "0402CG220J500NT",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C18",
+        "name": "={Value}",
+        "net": "",
+        "x": 585,
+        "y": 695,
+        "componentType": "part",
+        "symbolName": "0402CG220J500NT",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C19",
+        "name": "={Value}",
+        "net": "",
+        "x": 680,
+        "y": 495,
+        "componentType": "part",
+        "symbolName": "0402CG220J500NT",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C20",
+        "name": "={Value}",
+        "net": "",
+        "x": 680,
+        "y": 485,
+        "componentType": "part",
+        "symbolName": "0402CG220J500NT",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "C21",
+        "name": "={Value}",
+        "net": "",
+        "x": 680,
+        "y": 475,
+        "componentType": "part",
+        "symbolName": "0402CG220J500NT",
+        "footprintUuid": "e5a59e845a9ccf7c"
+      },
+      {
+        "designator": "U3",
+        "name": "={Manufacturer Part}",
+        "net": "",
+        "x": 805,
+        "y": 630,
+        "componentType": "part",
+        "symbolName": "ES8389",
+        "footprintUuid": "bb583fcbab353fe2"
+      },
+      {
+        "name": "CODEC_3V3",
+        "net": "CODEC_3V3",
+        "x": 475,
+        "y": 645,
+        "componentType": "netflag",
+        "symbolName": "Power-VCC_1"
+      },
+      {
+        "name": "CODEC_3V3",
+        "net": "CODEC_3V3",
+        "x": 1080,
+        "y": 615,
+        "componentType": "netflag",
+        "symbolName": "Power-VCC_1"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 510,
+        "y": 595,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND_1"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 960,
+        "y": 525,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND_1"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 1110,
+        "y": 565,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND_1"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 950,
+        "y": 625,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND_1"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 805,
+        "y": 705,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND_1"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 735,
+        "y": 475,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND_1"
+      },
+      {
+        "name": "AGND",
+        "net": "AGND",
+        "x": 645,
+        "y": 725,
+        "componentType": "netflag",
+        "symbolName": "Ground-GND_1"
+      },
+      {
+        "name": "ES_DLRCK",
+        "net": "ES_DLRCK",
+        "x": 630,
+        "y": 495,
+        "componentType": "netport",
+        "symbolName": "Netport-IN_1"
+      },
+      {
+        "name": "ES_SCLK",
+        "net": "ES_SCLK",
+        "x": 630,
+        "y": 485,
+        "componentType": "netport",
+        "symbolName": "Netport-IN_1"
+      },
+      {
+        "name": "ES_MCLK",
+        "net": "ES_MCLK",
+        "x": 630,
+        "y": 475,
+        "componentType": "netport",
+        "symbolName": "Netport-IN_1"
+      },
+      {
+        "name": "ES_ASDOUT",
+        "net": "ES_ASDOUT",
+        "x": 630,
+        "y": 465,
+        "componentType": "netport",
+        "symbolName": "Netport-IN_1"
+      },
+      {
+        "name": "ES_DSDIN",
+        "net": "ES_DSDIN",
+        "x": 565,
+        "y": 540,
+        "componentType": "netport",
+        "symbolName": "Netport-IN_1"
+      },
+      {
+        "designator": "R4",
+        "name": "={Value}",
+        "net": "",
+        "x": 645,
+        "y": 705,
+        "componentType": "part",
+        "symbolName": "FRC0402F1003TS",
+        "footprintUuid": "c7949492a10c6056"
+      },
+      {
+        "designator": "R5",
+        "name": "={Value}",
+        "net": "",
+        "x": 680,
+        "y": 465,
+        "componentType": "part",
+        "symbolName": "FRC0402F1003TS",
+        "footprintUuid": "c7949492a10c6056"
+      }
+    ],
+    "wireList": [
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "PA_CTRL",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "GND",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "ES_LOUTP",
+        "lineType": null
+      },
+      {
+        "net": "ES_LOUTN",
+        "lineType": null
+      },
+      {
+        "net": "VOP",
+        "lineType": null
+      },
+      {
+        "net": "VON",
+        "lineType": null
+      },
+      {
+        "net": "VIN",
+        "lineType": null
+      },
+      {
+        "net": "ES_I2C_SDA",
+        "lineType": null
+      },
+      {
+        "net": "ES_I2C_SCL",
+        "lineType": null
+      },
+      {
+        "net": "AUDIO_I2C_SDA",
+        "lineType": null
+      },
+      {
+        "net": "AUDIO_I2C_SCL",
+        "lineType": null
+      },
+      {
+        "net": "CODEC_3V3",
+        "lineType": null
+      },
+      {
+        "net": "CODEC_3V3",
+        "lineType": null
+      },
+      {
+        "net": "GND",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC2N",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC2P",
+        "lineType": null
+      },
+      {
+        "net": "AGND",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC1P",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC1N",
+        "lineType": null
+      },
+      {
+        "net": "LED_G",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "ES_SCLK",
+        "lineType": null
+      },
+      {
+        "net": "ES_MCLK",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "ES_DLRCK",
+        "lineType": null
+      },
+      {
+        "net": "ES_ASDOUT",
+        "lineType": null
+      },
+      {
+        "net": "AUDIO_I2C_SDA",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC1P",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC1N",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC2P",
+        "lineType": null
+      },
+      {
+        "net": "AUDIO_I2C_SCL",
+        "lineType": null
+      },
+      {
+        "net": "ES_MIC2N",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "ES_LOUTP",
+        "lineType": null
+      },
+      {
+        "net": "ES_LOUTN",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      },
+      {
+        "net": "",
+        "lineType": null
+      }
+    ]
+  },
+  "windowId": "73d8a7a7-f48a-456a-8bad-c6e1406add16"
+}

@@ -1,0 +1,151 @@
+devices:
+  # LCD Power Control (before LCD init). GPIO9 -> Q100 (AO3401A P-MOS) gate ->
+  # ME6211C -> LCD_3V3. P-MOS is LOW-active: GPIO9 LOW turns LCD_3V3 ON. The
+  # power_ctrl device must assert active_level=0; asserting HIGH would cut the
+  # screen power and leave it dark (the bug we hit).
+  - name: lcd_power
+    type: power_ctrl
+    sub_type: gpio
+    peripherals:
+    - name: gpio_power_lcd
+      active_level: 0
+
+  # LCD Backlight (PWM)
+  - name: lcd_brightness
+    type: ledc_ctrl
+    version: default
+    config:
+      default_percent: 80                  # 80% brightness at boot
+    peripherals:
+      - name: ledc_backlight
+
+  # Audio Codec Power Control (U2 HE9073A33M5R → ES8389). CE is active-HIGH,
+  # so the power_ctrl device must assert GPIO17 HIGH to turn CODEC_3V3 on.
+  - name: audio_power
+    type: power_ctrl
+    sub_type: gpio
+    peripherals:
+    - name: gpio_codec_power
+      active_level: 1                      # Active-HIGH
+
+  # ES8389 Audio DAC
+  - name: audio_dac
+    chip: es8389
+    type: audio_codec
+    version: default
+    power_ctrl_device: audio_power
+    config:
+      adc_enabled: false
+      dac_enabled: true
+      dac_max_channel: 2
+      dac_channel_mask: "11"
+      mclk_enabled: false                  # MCLK-less mode on 喵伴
+    peripherals:
+      - name: i2s_audio_out
+      - name: i2c_master
+        address: 0x20
+        frequency: 400000
+
+  # ES8389 Audio ADC (mic capture into Opus/uplink)
+  - name: audio_adc
+    chip: es8389
+    type: audio_codec
+    version: default
+    power_ctrl_device: audio_power
+    config:
+      adc_enabled: true
+      adc_max_channel: 2
+      adc_channel_mask: "11"
+      adc_channel_labels: ['FL', 'FR']
+      adc_init_gain: 0
+      mclk_enabled: false
+    peripherals:
+      - name: i2s_audio_in
+      - name: i2c_master
+        address: 0x20
+        frequency: 400000
+
+  # ST77916 QSPI 360x360 Round LCD
+  - name: display_lcd
+    chip: st77916
+    type: display_lcd
+    sub_type: spi
+    power_ctrl_device: lcd_power
+    version: default
+    dependencies:
+      espressif/esp_lcd_st77916: "*"
+    config:
+      x_max: 360
+      y_max: 360
+      need_reset: true
+      io_spi_config:
+        cs_gpio_num: 43                   # LCD_CS
+        dc_gpio_num: 40                   # LCD_DC
+        spi_mode: 0
+        lcd_cmd_bits: 32
+        flags:
+          quad_mode: true
+      lcd_panel_config:
+        reset_gpio_num: 60                # LCD_RST
+        flags:
+          reset_active_high: false        # 喵伴: LCD_RST is active-LOW
+        vendor_config: NULL
+    peripherals:
+    - name: spi_display
+
+  # CST816S Capacitive Touch (I2C)
+  - name: lcd_touch
+    chip: cst816s
+    type: lcd_touch
+    sub_type: i2c
+    version: default
+    dependencies:
+      espressif/esp_lcd_touch_cst816s: "*"
+    config:
+      touch_config:
+        x_max: 360
+        y_max: 360
+        int_gpio_num: 42                  # TP_INT
+    peripherals:
+      - name: i2c_master
+        i2c_addr: [0x2A]
+
+  # Camera power control (Q1 AO3401A PMOS → CAM_3V3). Active-LOW.
+  - name: cam_power
+    type: power_ctrl
+    sub_type: gpio
+    peripherals:
+    - name: gpio_cam_power
+      active_level: 0
+
+  # SC101IOT DVP camera (24-pin FPC P1). SCCB shares i2c_master with ES8389/touch.
+  # Pins verified against the OHHWHub schematic netlist (2026-08-12):
+  #   Y2..Y9 = GPIO57/49/50/48/56/55/54/47, PCLK=51, HREF(DE)=53, VSYNC=8,
+  #   XCLK=52 (20MHz), CAM_EN=10 (power_ctrl, low-active).
+  # CAM_RESET pulled to AVDD_2V8, CAM_PWDN pulled to GND → not MCU-controlled.
+  - name: camera
+    type: camera
+    sub_type: dvp
+    power_ctrl_device: cam_power
+    config:
+      dvp_config:
+        reset_io: -1
+        pwdn_io: -1
+        vsync_io: 8
+        data_width: "CAM_CTLR_DATA_WIDTH_8"
+        de_io: 53
+        pclk_io: 51
+        xclk_io: 52
+        xclk_freq: 20000000
+        data_io:
+          data_io_0: 57
+          data_io_1: 49
+          data_io_2: 50
+          data_io_3: 48
+          data_io_4: 56
+          data_io_5: 55
+          data_io_6: 54
+          data_io_7: 47
+    peripherals:
+      - name: i2c_master
+        frequency: 100000
