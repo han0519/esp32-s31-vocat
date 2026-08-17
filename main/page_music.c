@@ -505,6 +505,60 @@ static const char *music_parse_generic(cJSON *root, char *out, size_t out_len)
     return NULL;
 }
 
+/* --- MetingAPI (api.injahow.cn): device-direct-connectable, no key, returns
+ *     real 126.net direct links. Two steps:
+ *       search:  ?server=netease&type=search&name=SONG  -> [{id,...},...]
+ *       url:     ?server=netease&type=url&id=ID          -> {url:"https://mxxx.music.126.net/..."}
+ *     GMF follows the 302 to the real file, so playback is streaming. */
+#define METING_URL  "https://api.injahow.cn/meting"
+
+/* Pull the first song id out of a MetingAPI search array. */
+static const char *music_parse_meting_id(cJSON *root, char *out, size_t out_len)
+{
+    if (!cJSON_IsArray(root)) {
+        return NULL;
+    }
+    cJSON *item = cJSON_GetArrayItem(root, 0);
+    if (item == NULL || !cJSON_IsObject(item)) {
+        return NULL;
+    }
+    cJSON *id = cJSON_GetObjectItem(item, "id");
+    if (id != NULL && cJSON_IsString(id) && id->valuestring[0] != '\0') {
+        strncpy(out, id->valuestring, out_len - 1);
+        out[out_len - 1] = '\0';
+        return out;
+    }
+    return NULL;
+}
+
+/* Pull the url out of a MetingAPI url response ({url:"..."}). */
+static const char *music_parse_meting_url(cJSON *root, char *out, size_t out_len)
+{
+    cJSON *u = cJSON_GetObjectItem(root, "url");
+    if (cJSON_IsString(u) && u->valuestring && strncmp(u->valuestring, "http", 4) == 0) {
+        strncpy(out, u->valuestring, out_len - 1);
+        out[out_len - 1] = '\0';
+        return out;
+    }
+    return NULL;
+}
+
+/* MetingAPI full flow: search by name -> get id -> fetch direct url. */
+static esp_err_t music_try_meting(const char *enc, char *out_url, size_t len)
+{
+    char req[384];
+    snprintf(req, sizeof(req), "%s?server=netease&type=search&name=%s",
+             METING_URL, enc);
+    char id[32] = {0};
+    if (music_try_request(req, music_parse_meting_id, id, sizeof(id)) != ESP_OK ||
+        id[0] == '\0') {
+        return ESP_FAIL;
+    }
+    snprintf(req, sizeof(req), "%s?server=netease&type=url&id=%s",
+             METING_URL, id);
+    return music_try_request(req, music_parse_meting_url, out_url, len);
+}
+
 esp_err_t app_music_online_search(const char *name, char *out_url, size_t len)
 {
     if (name == NULL || name[0] == '\0' || out_url == NULL || len == 0) {
@@ -532,10 +586,16 @@ esp_err_t app_music_online_search(const char *name, char *out_url, size_t len)
             }
             free(req);
         }
-        ESP_LOGW("MUSIC", "custom API search failed; falling back to yaohud");
+        ESP_LOGW("MUSIC", "custom API search failed; falling back to meting");
     }
 
-    /* 1) yaohud (网易云 VIP 代理): a single call with n=1 returns the mp3 URL. */
+    /* 1) MetingAPI (injahow) — device-direct, no key, real direct link. */
+    if (music_try_meting(enc, out_url, len) == ESP_OK) {
+        return ESP_OK;
+    }
+    ESP_LOGW("MUSIC", "meting search failed; trying yaohud");
+
+    /* 2) yaohud (网易云 VIP 代理, keyed): single call returns mp3 URL. */
     if (s_music_key[0] != '\0') {
         char req[512];
         snprintf(req, sizeof(req), "%s?key=%s&msg=%s&n=1",
@@ -546,7 +606,7 @@ esp_err_t app_music_online_search(const char *name, char *out_url, size_t len)
         ESP_LOGW("MUSIC", "yaohud search failed; trying keyless fallbacks");
     }
 
-    /* 2) Keyless fallbacks (free APIs may be blocked/unreliable). */
+    /* 3) Keyless fallbacks (free APIs may be blocked/unreliable). */
     esp_err_t ret = ESP_FAIL;
     for (int i = 0; k_music_apis[i] != NULL; i++) {
         size_t req_cap = strlen(k_music_apis[i]) + strlen(enc) + 8;

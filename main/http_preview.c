@@ -616,7 +616,7 @@ static esp_err_t settings_handler(httpd_req_t *req)
         "<div class=\"card\">"
         "<label>yaohud 密钥 (KEY)</label>"
         "<input id=\"key\" type=\"text\" placeholder=\"从 api.yaohud.cn 获取\" value=\"%s\">"
-        "<div class=\"hint\">默认使用 yaohud 网易云 VIP 代理：<br>https://api.yaohud.cn/api/music/wyvip?key=KEY&amp;msg=歌名&amp;n=1</div>"
+        "<div class=\"hint\">默认使用 injahow 网易云直链（设备直连、无需部署），失败时回退 yaohud 代理：<br>https://api.yaohud.cn/api/music/wyvip?key=KEY&amp;msg=歌名&amp;n=1</div>"
         "<label>自定义接口 (可选, 留空用默认)</label>"
         "<input id=\"api\" type=\"text\" placeholder=\"含 {q} 的 URL 模板\" value=\"%s\">"
         "<div class=\"hint\">如需换成其它音乐源，填一个含 <b>{q}</b> 的 GET 模板（歌名会替换 {q}）。留空则使用默认 yaohud。<br>若设备连不上 yaohud（日志 ESP_ERR_HTTP_CONNECT），多半是热点屏蔽了该域名，可部署 tools/music-proxy-worker.js 的 Cloudflare Worker，这里填 <b>https://你的子域.workers.dev/music?msg={q}</b> 即可绕过。</div>"
